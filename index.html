@@ -176,6 +176,39 @@ body.dark .surprise-card{border-color:#3d3935}
 @media print{.surprise-overlay,.surprise-trigger{display:none!important}}
 
 
+
+/* Общий почтовый ящик для личных записок */
+.notes-badge{position:absolute;right:5px;top:2px;color:#a34b57;font-size:19px;line-height:1}
+.notes-overlay{display:none;position:fixed;inset:0;z-index:120;background:#171411bd;align-items:center;justify-content:center;padding:12px;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.notes-overlay.open{display:flex}
+.notes-card{width:min(100%,680px);max-height:calc(100dvh - 24px);display:flex;flex-direction:column;overflow:hidden;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:17px;box-shadow:0 28px 100px #0005}
+.notes-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 22px 14px;border-bottom:1px solid var(--line)}
+.notes-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:700}
+.notes-title{font:normal 27px/1.2 Georgia,serif;margin:0}
+.notes-content{padding:16px 22px 22px;overflow:auto;overscroll-behavior:contain}
+.notes-privacy{font-size:11px;line-height:1.55;color:var(--muted);background:var(--bg);border-radius:9px;padding:10px 12px;margin:0 0 15px}
+.notes-form{display:grid;gap:10px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.notes-form label{font-size:11px;color:var(--muted);display:grid;gap:6px}
+.notes-form select,.notes-form textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);padding:11px 12px;font:inherit;font-size:13px}
+.notes-form textarea{resize:vertical;min-height:90px;max-height:190px;line-height:1.5}
+.notes-send-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.notes-status{font-size:11px;line-height:1.45;color:var(--muted);margin:0}
+.notes-send{border:0;border-radius:9px;background:var(--accent);color:#fff;min-height:42px;padding:10px 16px;font-size:12px;font-weight:650;white-space:nowrap}
+.notes-send:disabled{opacity:.55;cursor:wait}
+.notes-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 10px}
+.notes-list-head strong{font:normal 19px Georgia,serif}
+.notes-refresh{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;min-height:34px;padding:6px 10px;font-size:11px}
+.notes-list{display:grid;gap:10px}
+.shared-note{border:1px solid var(--line);border-radius:11px;padding:13px 14px;background:color-mix(in srgb,var(--paper) 88%,var(--bg))}
+.shared-note-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.shared-note-sender{font-size:10px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.shared-note-date{font-size:10px;color:var(--muted)}
+.shared-note-body{font:15px/1.65 Georgia,serif;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.notes-empty{font-size:12px;line-height:1.6;color:var(--muted);text-align:center;padding:22px 10px}
+body.dark .notes-card{border-color:#3d3935}body.dark .notes-head{border-color:#3d3935}body.dark .notes-form{border-color:#3d3935}
+@media(max-width:520px){.notes-card{border-radius:14px;max-height:calc(100dvh - 20px)}.notes-head{padding:16px 16px 12px}.notes-title{font-size:24px}.notes-content{padding:13px 15px 18px}.notes-send-row{align-items:stretch;flex-direction:column}.notes-send{width:100%}.notes-privacy{font-size:10px}}
+@media print{.notes-overlay,#notesBtn{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -187,6 +220,7 @@ body.dark .surprise-card{border-color:#3d3935}
     <button class="icon-btn" id="bookmarkBtn" aria-label="Закладка" title="Открыть закладку или сохранить текущую страницу">♧</button>
     <button class="icon-btn" id="settingsBtn" aria-label="Настройки" title="Настройки чтения">Aa</button>
     <button class="icon-btn" id="themeBtn" aria-label="Сменить тему" title="Светлая / тёмная тема">◐</button>
+    <button class="icon-btn" id="notesBtn" aria-label="Записки друг другу" title="Оставить или прочитать записку" style="position:relative">✉<span id="notesBadge" class="notes-badge" hidden>•</span></button>
     <button class="icon-btn surprise-trigger" id="surpriseBtn" aria-label="Маленький сюрприз для Таисии" title="Маленький сюрприз">✦</button>
   </div>
 </header>
@@ -270,6 +304,29 @@ body.dark .surprise-card{border-color:#3d3935}
   </section>
 </div>
 
+<div class="notes-overlay" id="notesOverlay" role="dialog" aria-modal="true" aria-labelledby="notesTitle" aria-hidden="true">
+  <section class="notes-card">
+    <header class="notes-head">
+      <div><p class="notes-kicker">Маленький почтовый ящик</p><h2 class="notes-title" id="notesTitle">Записки друг другу</h2></div>
+      <button class="message-close" id="closeNotes" type="button" aria-label="Закрыть почтовый ящик">×</button>
+    </header>
+    <div class="notes-content">
+      <p class="notes-privacy">Это общая страница без входа: любой, у кого есть ссылка, потенциально может читать и добавлять записки, а имя отправителя можно выбрать вручную. Не оставляйте здесь пароли, адреса или другие личные данные.</p>
+      <form class="notes-form" id="notesForm">
+        <label>Кто оставляет записку?
+          <select id="notesSender"><option value="Артём">Артём</option><option value="Таисия">Таисия</option></select>
+        </label>
+        <label>Твоя записка
+          <textarea id="notesBody" maxlength="1200" required placeholder="Оставь несколько слов для другого человека…"></textarea>
+        </label>
+        <div class="notes-send-row"><p class="notes-status" id="notesStatus" aria-live="polite">Подключение к общему почтовому ящику ещё не настроено.</p><button class="notes-send" id="notesSend" type="submit">Оставить записку ♡</button></div>
+      </form>
+      <div class="notes-list-head"><strong>Оставленные записки</strong><button class="notes-refresh" id="refreshNotes" type="button">Обновить ↻</button></div>
+      <div class="notes-list" id="notesList" aria-live="polite"><p class="notes-empty">После настройки базы данных здесь появятся записки, оставленные вами обоими.</p></div>
+    </div>
+  </section>
+</div>
+
 <aside class="reading-note" id="readingNote" role="status" aria-live="polite" hidden>
   <div class="reading-note-top"><span class="reading-note-sender">Артём · маленькое сообщение</span><button class="reading-note-close" id="closeReadingNote" type="button" aria-label="Закрыть сообщение">×</button></div>
   <p class="reading-note-text" id="readingNoteText"></p>
@@ -282,6 +339,12 @@ body.dark .surprise-card{border-color:#3d3935}
 const BOOK = JSON.parse(document.getElementById('book-data').textContent);
 const $ = id => document.getElementById(id);
 const STORAGE = 'dragonBookModernV1';
+// После создания проекта Supabase вставьте сюда Project URL и anon/public key.
+// Эти данные используются в браузере; доступ ограничивается RLS-политиками в SQL.
+const NOTES_CONFIG = {
+  supabaseUrl: 'sb_publishable_7HRolJNwCq15Jq6N4jdrSw_EH8eV3nK',
+  anonKey: 'sb_secret_AOdU_3qy6915vUjxSeXeuA_YzqA77I1'
+};
 const all = BOOK.paragraphs;
 const chapterRe = /^(Глава\s+\d+\..+|Эпилог\b.*)$/i;
 const partRe = /^(ЧАСТЬ\s+[IVXLC0-9]+|ЧАСТЬ\s+[IVXLC0-9]+.*)$/i;
@@ -401,6 +464,55 @@ function doSearch(q){
 function init(){
   makeSections();buildPages();
   const messageOverlay=$('messageOverlay');
+  // Общие записки хранятся в Supabase, а не только в локальном браузере.
+  const notesOverlay=$('notesOverlay');
+  const notesConfigured=()=>NOTES_CONFIG.supabaseUrl.startsWith('https://') && !NOTES_CONFIG.supabaseUrl.includes('YOUR_SUPABASE') && NOTES_CONFIG.anonKey.length>20 && !NOTES_CONFIG.anonKey.includes('YOUR_SUPABASE');
+  const notesEndpoint=()=>NOTES_CONFIG.supabaseUrl.replace(/\/$/,'')+'/rest/v1/love_notes';
+  const notesHeaders=()=>({'apikey':NOTES_CONFIG.anonKey,'Authorization':'Bearer '+NOTES_CONFIG.anonKey,'Content-Type':'application/json'});
+  const setNotesStatus=(text)=>{$('notesStatus').textContent=text};
+  const showNotesSetup=()=>{
+    setNotesStatus('Сначала настрой Supabase и добавь Project URL и anon key в NOTES_CONFIG в index.html. Инструкция — в файле README_NOTES.txt.');
+    $('notesList').innerHTML='';const p=document.createElement('p');p.className='notes-empty';p.textContent='Общий ящик пока не подключён. После настройки здесь будут видны записки с обоих устройств.';$('notesList').appendChild(p);
+  };
+  const loadSharedNotes=async()=>{
+    if(!notesConfigured()){showNotesSetup();return}
+    $('refreshNotes').disabled=true;setNotesStatus('Загружаю записки…');
+    try{
+      const response=await fetch(notesEndpoint()+'?select=id,sender,body,created_at&order=created_at.desc&limit=100',{method:'GET',headers:notesHeaders(),cache:'no-store'});
+      if(!response.ok)throw new Error((await response.text()).slice(0,240)||('HTTP '+response.status));
+      const notes=await response.json();const list=$('notesList');list.replaceChildren();
+      if(!notes.length){const p=document.createElement('p');p.className='notes-empty';p.textContent='Пока нет ни одной записки. Пусть первая появится здесь ♡';list.appendChild(p)}
+      notes.forEach(note=>{
+        const card=document.createElement('article');card.className='shared-note';
+        const top=document.createElement('div');top.className='shared-note-top';
+        const sender=document.createElement('span');sender.className='shared-note-sender';sender.textContent=note.sender==='Таисия'?'От Таисии':'От Артёма';
+        const date=document.createElement('time');date.className='shared-note-date';
+        const parsed=new Date(note.created_at);date.dateTime=Number.isNaN(parsed.getTime())?'':parsed.toISOString();date.textContent=Number.isNaN(parsed.getTime())?'':new Intl.DateTimeFormat('ru-RU',{dateStyle:'medium',timeStyle:'short'}).format(parsed);
+        top.append(sender,date);const body=document.createElement('p');body.className='shared-note-body';body.textContent=note.body;card.append(top,body);list.appendChild(card);
+      });
+      setNotesStatus(notes.length?'Записки синхронизированы. Новые появятся после обновления.':'Ящик готов — можно оставить первую записку.');
+    }catch(error){setNotesStatus('Не удалось загрузить записки. Проверь настройки и SQL-политики Supabase. Подробности: '+String(error.message||error).slice(0,180));}
+    finally{$('refreshNotes').disabled=false}
+  };
+  const openNotes=()=>{notesOverlay.classList.add('open');notesOverlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';loadSharedNotes();setTimeout(()=>$('notesBody').focus(),50)};
+  const closeNotes=()=>{notesOverlay.classList.remove('open');notesOverlay.setAttribute('aria-hidden','true');document.body.style.overflow=''};
+  $('notesBtn').addEventListener('click',openNotes);
+  $('closeNotes').addEventListener('click',closeNotes);
+  notesOverlay.addEventListener('click',e=>{if(e.target===notesOverlay)closeNotes()});
+  $('refreshNotes').addEventListener('click',loadSharedNotes);
+  $('notesForm').addEventListener('submit',async e=>{
+    e.preventDefault();const body=$('notesBody').value.trim();const sender=$('notesSender').value;
+    if(!body){setNotesStatus('Напиши хотя бы пару слов.');return}
+    if(body.length>1200){setNotesStatus('Записка слишком длинная: максимум 1200 символов.');return}
+    if(!notesConfigured()){showNotesSetup();return}
+    $('notesSend').disabled=true;setNotesStatus('Отправляю записку…');
+    try{
+      const response=await fetch(notesEndpoint(),{method:'POST',headers:{...notesHeaders(),'Prefer':'return=minimal'},body:JSON.stringify({sender,body})});
+      if(!response.ok)throw new Error((await response.text()).slice(0,240)||('HTTP '+response.status));
+      $('notesBody').value='';setNotesStatus('Записка оставлена ♡');await loadSharedNotes();showToast('Записка оставлена ♡');
+    }catch(error){setNotesStatus('Не удалось отправить. Проверь URL, anon key и SQL-политики. Подробности: '+String(error.message||error).slice(0,180));}
+    finally{$('notesSend').disabled=false}
+  });
   let readingNotesStarted=false, readingNoteTimer=null, readingNoteDismissTimer=null;
   const readingNotes=[
     'в жизни будет много трудностей — у меня и у тебя. и всё равно мне хотелось проходить их рядом с тобой.',
@@ -526,8 +638,8 @@ function init(){
     if(window.innerWidth<=900) document.querySelector('.sidebar').classList.remove('mobile-open');
   }));
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){$('searchPanel').classList.remove('open');$('settingsPanel').classList.remove('open');closeMessage();closeSurprise()}
-    const modalOpen=$('searchPanel').classList.contains('open')||$('settingsPanel').classList.contains('open')||surpriseOverlay.classList.contains('open')||(!messageOverlay.hidden&&messageOverlay.style.display!=='none');
+    if(e.key==='Escape'){$('searchPanel').classList.remove('open');$('settingsPanel').classList.remove('open');closeMessage();closeSurprise();closeNotes()}
+    const modalOpen=$('searchPanel').classList.contains('open')||$('settingsPanel').classList.contains('open')||surpriseOverlay.classList.contains('open')||notesOverlay.classList.contains('open')||(!messageOverlay.hidden&&messageOverlay.style.display!=='none');
     if(e.key==='ArrowRight'&&!modalOpen)step(1);if(e.key==='ArrowLeft'&&!modalOpen)step(-1);
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'){e.preventDefault();$('searchPanel').classList.add('open');$('searchInput').focus()}
   });
