@@ -1,5 +1,5 @@
 
-const CACHE = 'dragon-book-v3';
+const CACHE = 'dragon-book-v4';
 
 const FILES = [
   './',
